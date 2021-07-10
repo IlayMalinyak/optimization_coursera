@@ -7,11 +7,13 @@ from collections import namedtuple
 # import mlrose_solver
 from opt import TSP
 import time
-
+import itertools
+import numpy as np
+from tqdm import tqdm
 Point = namedtuple("Point", ['x', 'y'])
 
 def length(point1, point2):
-    return math.sqrt((point1.x - point2.x)**2 + (point1.y - point2.y)**2)
+    return np.sqrt((point1.x - point2.x)**2 + (point1.y - point2.y)**2)
 
 def solve_it(input_data):
     # Modify this code to run your optimization algorithm
@@ -30,26 +32,26 @@ def solve_it(input_data):
         points.append(Point(float(parts[0]), float(parts[1])))
         indexs[Point(float(parts[0]), float(parts[1]))] = i - 1
 
-    for p in range(len(points) - 1):
-        for p2 in range(p + 1, len(points)):
-            w = length(points[p], points[p2])
-            edges.append((points[p], points[p2], w))
-            edges.append((points[p2], points[p], w))
+    # all_combinations = itertools.combinations(points, 2)
+    # for p in tqdm(all_combinations):
+    #     edges.append((p[0], p[1], length(p[0], p[1])))
 
-    edges.append((points[-1], points[0], length(points[-1], points[0])))
-    edges.append((points[0], points[-1], length(points[-1], points[0])))
-    tsp = TSP(points, edges)
-    # for p in range(len(points) - 1):
-    #     for p2 in range(p, len(points)):
-    #         w = length(points[p], points[p2])
-    #         tsp.addEdge(points[p], points[p2], w)
-    # tsp.addEdge(points[-1], points[0], length(points[-1], points[0]))
-    # start = time.time()
-    tour, _ = tsp.greedyTour(startnode=None, randomized=False)
-    # end1 = time.time()
+    if nodeCount < 10000:
+        for p in range(len(points) - 1):
+            for p2 in range(p + 1, len(points)):
+                w = length(points[p], points[p2])
+                edges.append((points[p], points[p2], w))
+                edges.append((points[p2], points[p], w))
+
+        edges.append((points[-1], points[0], length(points[-1], points[0])))
+        edges.append((points[0], points[-1], length(points[-1], points[0])))
+        tsp = TSP(points, edges)
+
+        tour, _ = tsp.greedyTour(startnode=None, randomized=False)
+    else:
+        tsp = TSP(points, edges)
+        tour = points
     solution, obj = tsp.threeOPT(tour)
-    # end2 = time.time()
-    # print("greedy time ", end1 - start, "opt-3 time ", end2 - start)
 
     # tsp.main(points)
     # build a trivial solution

@@ -1,5 +1,5 @@
 from random import choice, sample, randint
-
+import math
 from graph import Graph
 
 
@@ -32,6 +32,9 @@ class TSP(Graph):
             for v in self.nodes
         }
 
+    def dist(self, node1, node2):
+        return math.sqrt((node1.x - node2.x) ** 2 + (node1.y - node2.y) ** 2)
+
     def greedyTour(self, startnode=None, randomized=False):
             """
             Method to create a greedy tour on object's
@@ -53,14 +56,30 @@ class TSP(Graph):
             """
 
             # tracker for nodes that have been visited
+
+            # cur = choice(self.nodes)
+            # tour = [cur]
+            # tourlength = 0
+            # free_nodes = set(self.nodes)
+            # free_nodes.remove(cur)
+            # print("starting")
+            # while free_nodes:
+            #     next_node = min(free_nodes, key=lambda x: self.dist(cur, x))
+            #     tourlength += self.dist(cur, next_node)
+            #     free_nodes.remove(next_node)
+            #     tour.append(next_node)
+            #     cur = next_node
             nodevisited = {v: False for v in self.nodes}
 
             # initializing empty tour
             tourlength = 0
             tour = []
 
+            print("starting sorting")
+
             # sort adjacency lists of outgoing edges for each vertex
             self.sortAdjacency()
+            print("finished sorting")
 
             try:
                 # if specified, else pick first node in the graph
@@ -159,7 +178,7 @@ class TSP(Graph):
         tourlen = 0
         for i in range(len(tour)-1):
             try:
-                tourlen += self.edges[(tour[i], tour[i+1])]
+                tourlen += self.dist(tour[i], tour[i+1])
             except KeyError:
                 print(f"({tour[i]}, {tour[i+1]}) edge is not part of graph")
         return tourlen
@@ -186,7 +205,10 @@ class TSP(Graph):
 
             # tracking improvemnt in tour
             improved = True
+            iter = 0
             while improved:
+                iter += 1
+                print(iter)
                 combos = [self.generateRandomCombo(tour) for i in range(
                     100000)]
                 improved = False
@@ -203,37 +225,38 @@ class TSP(Graph):
                     # possible cases of removing three edges
                     # and adding three
                     deltacase = {
-                        1: self.edges[a,e] + self.edges[b,f] \
-                            - self.edges[a,b] - self.edges[e,f],
+                        1: self.dist(a,e) + self.dist(b,f) \
+                            - self.dist(a,b) - self.dist(e,f),
 
-                        2: self.edges[a,c] + self.edges[b,d] \
-                            - self.edges[a,b] - self.edges[c,d],
+                        2: self.dist(a,c) + self.dist(b,d) \
+                            - self.dist(a,b) - self.dist(c,d),
 
-                        3: self.edges[c,e] + self.edges[d,f] \
-                            - self.edges[c,d] - self.edges[e,f],
+                        3: self.dist(c,e) + self.dist(d,f) \
+                            - self.dist(c,d) - self.dist(e,f),
 
-                        4: self.edges[a,d] + self.edges[e,c] + self.edges[b,f]\
-                            - self.edges[a,b] - self.edges[c,d] - self.edges[e,f],
+                        4: self.dist(a,d) + self.dist(e,c) + self.dist(b,f)\
+                            - self.dist(a,b) - self.dist(c,d) - self.dist(e,f),
 
-                        5: self.edges[a,e] + self.edges[d,b] + self.edges[c,f]\
-                            - self.edges[a,b] - self.edges[c,d] - self.edges[e,f],
+                        5: self.dist(a,e) + self.dist(d,b) + self.dist(c,f)\
+                            - self.dist(a,b) - self.dist(c,d) - self.dist(e,f),
 
-                        6: self.edges[a,c] + self.edges[b,e] + self.edges[d,f]\
-                            - self.edges[a,b] - self.edges[c,d] - self.edges[e,f],
+                        6: self.dist(a,c) + self.dist(d,e) + self.dist(b,f)\
+                            - self.dist(a,b) - self.dist(c,d) - self.dist(e,f),
 
-                        7: self.edges[a,d] + self.edges[e,b] + self.edges[c,f]\
-                            - self.edges[a,b] - self.edges[c,d] - self.edges[e,f],
+                        7: self.dist(a,d) + self.dist(e,b) + self.dist(c,f)\
+                            - self.dist(a,b) - self.dist(c,d) - self.dist(e,f),
                     }
 
                     # get the case with most benefit
                     bestcase = min(deltacase, key=deltacase.get)
 
-                    if deltacase[bestcase] < 0:
+                    if deltacase[bestcase] < 0 and iter < 100:
                         #print(deltacase[bestcase], i, j, k, bestcase)
                         tour = TSP.swapEdgesThreeOPT(tour.copy(), i, j, k, case=bestcase)
                         #print(self.calculateTourLength(tour), tourlen + deltacase[bestcase])
                         tourlen += deltacase[bestcase]
                         improved = True
+            print("number of iterations ", iter)
 
             return tour, tourlen
 
